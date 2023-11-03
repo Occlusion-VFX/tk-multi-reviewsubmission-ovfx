@@ -86,10 +86,6 @@ class SubmitterSGTK(HookBaseClass):
         # create a name for the version based on the file name
         # grab the file name, strip off extension
         name = os.path.splitext(os.path.basename(path_to_movie))[0]
-
-        # find and sort transcoded files
-        transcodes = self.sortTranscodes(path_to_movie, name)
-
         # do some replacements
         name = name.replace("_", " ")
         # and capitalize
@@ -135,8 +131,7 @@ class SubmitterSGTK(HookBaseClass):
         self.__app.log_debug("Created version in shotgun: %s" % str(data))
 
         # upload files:
-        # self._upload_files(sg_version, path_to_movie, thumbnail_path)
-        self.uploadTranscodes(sg_version, transcodes)
+        self._upload_files(sg_version, path_to_movie, thumbnail_path)
 
         # Remove from filesystem if required
         if not self._store_on_disk and os.path.exists(path_to_movie):
@@ -144,7 +139,7 @@ class SubmitterSGTK(HookBaseClass):
 
         return sg_version
 
-    def _upload_files(self, sg_version, output_path, type): #thumbnail_path):
+    def _upload_files(self, sg_version, output_path, thumbnail_path):
         """
         Upload the required files to Shotgun.
 
@@ -155,10 +150,9 @@ class SubmitterSGTK(HookBaseClass):
         # Upload in a new thread and make our own event loop to wait for the
         # thread to finish.
         event_loop = QtCore.QEventLoop()
-        # thread = UploaderThread(
-        #     self.__app, sg_version, output_path, thumbnail_path, self._upload_to_shotgun
-        # )
-        thread = UploaderThread(self.__app, sg_version, output_path, type)
+        thread = UploaderThread(
+            self.__app, sg_version, output_path, thumbnail_path, self._upload_to_shotgun
+        )
         thread.finished.connect(event_loop.quit)
         thread.start()
         event_loop.exec_()
@@ -167,135 +161,54 @@ class SubmitterSGTK(HookBaseClass):
         for e in thread.get_errors():
             self.__app.log_error(e)
 
-    def sortTranscodes(self, input, name):
-        transcodes = os.path.join(os.path.dirname(input), 'transcodes', name)
-
-        transcode_files = os.listdir(transcodes)
-        transcode_dict = []
-        for file in transcode_files:
-            path = os.path.join(transcodes,file)
-            ext = os.path.splitext(path)[1].replace('.','')
-            transcode_dict.append(
-                {
-                'path': path,
-                'ext': ext,
-                    }
-                        )
-
-        return transcode_dict
-
-    def uploadTranscodes(self, sg_version, dict):
-        for x in dict:
-            if x['ext'] == 'jpg':
-                f = os.path.splitext(os.path.basename(x['path']))[0]
-                type = f.split('_')[-1]
-                self._upload_files(sg_version, x['path'], type)
-                print('==> Uploading image')
-            else:
-                self._upload_files(sg_version, x['path'], x['ext'])
-                print('==> Uploading movie!')
-
-
-
-# class UploaderThread(QtCore.QThread):
-#     """
-#     Simple worker thread that encapsulates uploading to shotgun.
-#     Broken out of the main loop so that the UI can remain responsive
-#     even though an upload is happening.
-#     """
-
-#     def __init__(self, app, version, path_to_movie, thumbnail_path, upload_to_shotgun):
-#         QtCore.QThread.__init__(self)
-#         self._app = app
-#         self._version = version
-#         self._path_to_movie = path_to_movie
-#         self._thumbnail_path = thumbnail_path
-#         self._upload_to_shotgun = upload_to_shotgun
-#         self._errors = []
-
-#     def get_errors(self):
-#         """
-#         Returns the errors collected while uploading files to Shotgun.
-
-#         :returns:   List of errors
-#         :rtype:     [str]
-#         """
-#         return self._errors
-
-#     def run(self):
-#         """
-#         This function implements what get executed in the UploaderThread.
-#         """
-#         upload_error = False
-
-#         if self._upload_to_shotgun:
-#             try:
-#                 self._app.sgtk.shotgun.upload(
-#                     "Version",
-#                     self._version["id"],
-#                     self._path_to_movie,
-#                     "sg_uploaded_movie",
-#                 )
-#             except Exception as e:
-#                 self._errors.append("Movie upload to SG failed: %s" % e)
-#                 upload_error = True
-
-#         if not self._upload_to_shotgun or upload_error:
-#             try:
-#                 self._app.sgtk.shotgun.upload_thumbnail(
-#                     "Version", self._version["id"], self._thumbnail_path
-#                 )
-#             except Exception as e:
-#                 self._errors.append("Thumbnail upload to SG failed: %s" % e)
-
 
 class UploaderThread(QtCore.QThread):
     """
     Simple worker thread that encapsulates uploading to shotgun.
     Broken out of the main loop so that the UI can remain responsive
-    even though an upload is happening
+    even though an upload is happening.
     """
-    def __init__(self, app, version, path, type):
+
+    def __init__(self, app, version, path_to_movie, thumbnail_path, upload_to_shotgun):
         QtCore.QThread.__init__(self)
         self._app = app
         self._version = version
-        self._path = path
-        self._type = type
-
+        self._path_to_movie = path_to_movie
+        self._thumbnail_path = thumbnail_path
+        self._upload_to_shotgun = upload_to_shotgun
         self._errors = []
 
     def get_errors(self):
         """
-        can be called after execution to retrieve a list of errors
+        Returns the errors collected while uploading files to Shotgun.
+
+        :returns:   List of errors
+        :rtype:     [str]
         """
         return self._errors
 
     def run(self):
         """
-        Thread loop
+        This function implements what get executed in the UploaderThread.
         """
         upload_error = False
 
-        if self._type == 'mp4' or self._type == 'webm':
+        if self._upload_to_shotgun:
             try:
-                self._app.sgtk.shotgun.upload("Version",
+                self._app.sgtk.shotgun.upload(
+                    "Version",
                     self._version["id"],
-                    self._path,
-                    "sg_uploaded_movie_{}".format(self._type),
-                        )
-            except Exception, e:
-                self._errors.append("Movie upload to Shotgun failed: %s" % e)
+                    self._path_to_movie,
+                    "sg_uploaded_movie",
+                )
+            except Exception as e:
+                self._errors.append("Movie upload to SG failed: %s" % e)
                 upload_error = True
 
-        elif str(self._type).lower() == 'thumbnail':
+        if not self._upload_to_shotgun or upload_error:
             try:
-                self._app.sgtk.shotgun.upload_thumbnail("Version", self._version["id"], self._path)
-            except Exception, e:
-                self._errors.append("Thumbnail upload to Shotgun failed: %s" % e)
-
-        elif str(self._type).lower() == 'filmstrip':
-            try:
-                self._app.sgtk.shotgun.upload_filmstrip_thumbnail("Version", self._version["id"], self._path)
-            except Exception, e:
-                self._errors.append("Thumbnail upload to Shotgun failed: %s" % e)
-
+                self._app.sgtk.shotgun.upload_thumbnail(
+                    "Version", self._version["id"], self._thumbnail_path
+                )
+            except Exception as e:
+                self._errors.append("Thumbnail upload to SG failed: %s" % e)

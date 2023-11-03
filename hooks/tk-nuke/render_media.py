@@ -12,11 +12,13 @@ import sgtk
 import os
 import sys
 import nuke
+from datetime import datetime
 
 from tank_vendor import six
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
+ffmpeg_path = "V:/Scripts/FFMPEG/FFMPEG_Current/bin/ffmpeg.exe"
 
 class RenderMedia(HookBaseClass):
     """
@@ -29,7 +31,7 @@ class RenderMedia(HookBaseClass):
         self.__app = self.parent
 
         self._burnin_nk = os.path.join(
-            self.__app.disk_location, "resources", "burnin.nk"
+            self.__app.disk_location, "resources", "occludeburns.nk"
         )
         self._font = os.path.join(
             self.__app.disk_location, "resources", "liberationsans_regular.ttf"
@@ -95,16 +97,28 @@ class RenderMedia(HookBaseClass):
             if color_space:
                 read["colorspace"].setValue(color_space)
 
+            data = self.wrangleData(first_frame, last_frame)
+
+            ''' Add shot LUT '''
+            cubeFile = self.findCubeFile(ctx)
+            if cubeFile is None:
+                lut = self.createLUT_Node(read, None)
+            else:
+                lut = self.createLUT_Node(read, cubeFile)
+
+            ''' Scale here to keep aspect to crop to format '''
+            # create a scale node
+            crop = False
+            if crop:
+                scale = self.__create_scale_node(width, height)
+                scale.setInput(0, read if cubeFile is None else lut)
+
             # now create the slate/burnin node
             burn = nuke.nodePaste(self._burnin_nk)
-            burn.setInput(0, read)
-
-            # set the fonts for all text fields
-            burn.node("top_left_text")["font"].setValue(self._font)
-            burn.node("top_right_text")["font"].setValue(self._font)
-            burn.node("bottom_left_text")["font"].setValue(self._font)
-            burn.node("framecounter")["font"].setValue(self._font)
-            burn.node("slate_info")["font"].setValue(self._font)
+            if cubeFile is None:
+                burn.setInput(0, scale if crop else read)
+            else:
+                burn.setInput(1, scale if crop else lut)
 
             # add the logo
             burn.node("logo")["file"].setValue(self._logo)
@@ -122,24 +136,28 @@ class RenderMedia(HookBaseClass):
             else:
                 version_label = "v%s" % version_str
 
-            burn.node("top_left_text")["message"].setValue(ctx.project["name"])
-            burn.node("top_right_text")["message"].setValue(ctx.entity["name"])
-            burn.node("bottom_left_text")["message"].setValue(version_label)
+            ### INFO
+            current_user = sgtk.util.get_current_user(self.__app.sgtk)
+            filename = os.path.splitext(os.path.basename(input_path))[0]
+
+            comment = self.retrieveComment(ctx, input_path,)
+
+            ### BURN INS
+            burn.node('top_left')['message'].setValue(ctx.project['name'])
+            burn.node('top')['message'].setValue('')
+            burn.node('top_right')['message'].setValue(datetime.today().strftime('%m/%d/%y'))
+            burn.node('bottom_left')['message'].setValue('v{}'.format(version_str))
+            burn.node('bottom')['message'].setValue(ctx.entity['name'])
 
             # and the slate
-            slate_str = "Project: %s\n" % ctx.project["name"]
-            slate_str += "%s: %s\n" % (ctx.entity["type"], ctx.entity["name"])
-            slate_str += "Name: %s\n" % name.capitalize()
-            slate_str += "Version: %s\n" % version_str
+            burn.node('Project_Name')['message'].setValue(str(ctx.project['name']))
+            burn.node('Date')['message'].setValue(datetime.today().strftime('%m/%d/%y'))
+            burn.node('Filename')['message'].setValue(filename.split('.')[0])
+            burn.node('Frames')['message'].setValue("{} - {}".format(first_frame, last_frame))
+            burn.node('Artist')['message'].setValue(current_user['name'])
+            burn.node('Version')['message'].setValue(version_label)
+            burn.node('Notes')['message'].setValue(comment)
 
-            if ctx.task:
-                slate_str += "Task: %s\n" % ctx.task["name"]
-            elif ctx.step:
-                slate_str += "Step: %s\n" % ctx.step["name"]
-
-            slate_str += "Frames: %s - %s\n" % (first_frame, last_frame)
-
-            burn.node("slate_info")["message"].setValue(slate_str)
 
             # create a scale node
             scale = self.__create_scale_node(width, height)
@@ -163,6 +181,8 @@ class RenderMedia(HookBaseClass):
 
         # Cleanup after ourselves
         nuke.delete(group)
+        
+        self.TranscodeFile(output_path, data)
 
         return output_path
 
@@ -237,8 +257,7 @@ class RenderMedia(HookBaseClass):
             if nuke.NUKE_VERSION_MAJOR >= 9:
                 # Nuke 9.0v1 changed the codec knob name to meta_codec and added an encoder knob
                 # (which defaults to the new mov64 encoder/decoder).
-                settings["meta_codec"] = "jpeg"
-                settings["mov64_quality_max"] = "3"
+                settings["meta_codec"] = "apcn"
             else:
                 settings["codec"] = "jpeg"
 
@@ -255,3 +274,250 @@ class RenderMedia(HookBaseClass):
                 settings["format"] = "MOV format (mov)"
 
         return settings
+
+
+    def createLUT_Node(self, read, path, colorspace='sRGB'):
+        group = nuke.nodes.Group()
+        group.begin()
+
+        input = nuke.nodes.Input()
+        
+        if path != None:
+            ft = nuke.nodes.OCIOFileTransform()
+            ft['file'].setValue(path)
+            ft['working_space'].setValue('sRGB')
+            ft.setInput(0, input)
+        else:
+            ft = nuke.nodes.Colorspace()
+            ft['colorspace_out'].setValue('sRGB')
+            ft.setInput(0, input)
+
+        cs = nuke.nodes.Colorspace()
+        cs['colorspace_in'].setValue('sRGB')
+        cs.setInput(0, ft)
+
+        output = nuke.nodes.Output()
+        output.setInput(0, cs)
+        group.end()
+
+        group.setInput(0, read)
+        return group
+
+
+    def wrangleData(self, ff, lf):
+        frames = int(lf-ff+1)
+        interval = int(frames/50)
+        if interval == 0:
+            numframes = frames
+        else:
+            numframes = int(frames/interval)
+        thumb = int(frames/2)
+        data = {
+            'frames': frames,
+            'fps': nuke.root()['fps'].getValue(),
+            'interval': interval,
+            'num_frames': numframes,
+            'thumb': thumb,
+                }
+
+        return data
+
+
+    def createMP4(self, fps, input, version):
+        start = datetime.now()
+        # vcodec = "libx264 -pix_fmt yuv422p10le \
+        #           -g 30 -b:v 2000k -preset veryslow -bf 0 -movflags +faststart -crf 15 -tune film"
+        vcodec = "libx264 -pix_fmt yuv420p \
+                  -g 30 -b:v 2000k -preset veryslow -bf 0 -movflags +faststart -crf 17 -tune zerolatency"
+
+
+        newfile = os.path.basename(input).replace('.mov', '.mp4')
+        output =  os.path.join(version, newfile)
+
+        args = " \
+            -r {fps} \
+            -i {input} \
+            -vcodec {vcodec} \
+            -acodec acc \
+            {output}".format(
+                fps=fps,
+                input=input,
+                vcodec=vcodec,
+                output=output,
+                    )
+
+        os.system('cmd /c "{exe} -y -loglevel warning -stats {args}"'.format(
+            exe=ffmpeg_path,
+            args=args,
+                )
+            )
+        elapsed = datetime.now() - start
+        print('==> MP4 created! [{}]'.format(elapsed))
+        return output
+
+
+    def createWebM(self, fps, input, version):
+        start = datetime.now()
+        vcodec = "libvpx-vp9 -pix_fmt yuv420p -b:v 0 -crf 17 -threads 2 -speed 2"
+        newfile = os.path.basename(input).replace('.mov', '.webm')
+        output = os.path.join(version, newfile)
+
+        args = " \
+            -r {fps} \
+            -i {input} \
+            -vcodec {vcodec} \
+            -acodec acc \
+            {output}".format(
+                fps=fps,
+                input=input,
+                vcodec=vcodec,
+                output=output,
+                    )
+
+        os.system('cmd /c "{exe} -y -loglevel warning -stats {args}"'.format(
+            exe=ffmpeg_path,
+            args=args,
+                )
+            )
+        elapsed = datetime.now() - start
+        print('==> WebM created! [{}]'.format(elapsed))
+        return output
+
+
+    def createThumbnail(self, fps, file, thumb, version):
+        start = datetime.now()
+        output=os.path.join(version, os.path.basename(file).replace('.mov', '_thumbnail.jpg'))
+
+        args = " \
+            -r {fps} \
+            -i {input} \
+            -frames 1 \
+            -vf \"scale=640:-1,select=gte(n\,{thumb})\" \
+            {output} \
+                ".format(
+                    fps=fps,
+                    input=file,
+                    thumb=thumb,
+                    output=output,
+                    )
+
+        os.system('cmd /c "{executable} -y -loglevel warning {args}"'.format(
+            executable=ffmpeg_path,
+            args=args,
+                )
+            )
+        print('==> Thumbnail created! [{}]'.format(datetime.now()-start))
+        return output
+
+
+    def createFilmstrip(self, fps, file, interval, num_frames, version):
+        start = datetime.now()
+        output=os.path.join(version, os.path.basename(file).replace('.mov', '_filmstrip.jpg'))
+
+
+
+        args = " \
+            -r {fps} \
+            -i {input} \
+            -frames 1 \
+            -vf \"scale=240:-1,select=not(mod(n\\,{interval})),tile={num_frames}x1\" \
+            {output} \
+                ".format(
+                    fps=fps,
+                    input=file,
+                    interval=interval if interval > 1 else 1,
+                    num_frames=num_frames,
+                    output=output,
+                    )
+
+        os.system('cmd /c "{executable} -y -loglevel warning -stats {args}"'.format(
+            executable=ffmpeg_path,
+            args=args,
+                )
+            )
+        print('==> Filmstrip created! [{}]'.format(datetime.now()-start))
+        return output
+
+
+    def TranscodeFile(self, input, data):
+        start = datetime.now()
+        dir = os.path.dirname(input)
+        transcodes = os.path.join(dir,'transcodes')
+        if not os.path.isdir(transcodes):
+            os.mkdir(transcodes)
+
+        version = os.path.join(transcodes, os.path.splitext( os.path.basename(input) )[0])
+        if not os.path.isdir(version):
+            os.mkdir(version)
+
+        mp4 = self.createMP4(data['fps'], input, version)
+        webm = self.createWebM(data['fps'], input, version)
+        thumbnail = self.createThumbnail(data['fps'], input, data['thumb'], version)
+        filmstrip = self.createFilmstrip(data['fps'], input, data['interval'], data['num_frames'], version)
+        print('====> Finished! [{}]'.format(datetime.now()-start))
+
+
+    def findCubeFile(self, context):
+        path = None
+        filters = [
+            ['entity.Shot.code', 'is', context.entity["name"]]
+                ]
+
+        if context.task:
+            filters.append(['task.Task.content', 'is', context.task["name"]])
+        elif ctx.step:
+            filters.append(['task.Task.content', 'is', context.step["name"]])
+
+        fields = ['published_file_type', 'path']
+        order = [
+            {'field_name': 'version_number',
+             'direction': 'desc',}
+             ]
+        found = self.__app.sgtk.shotgun.find('PublishedFile', filters, fields, order)
+
+        for f in found:
+            if f['published_file_type']['name'] == 'Cube File':
+                path = f['path']['local_path']
+                
+        if path != None:
+            return path.replace('\\', '/')
+        else:
+            return None
+
+
+    def retrieveComment(self, context, path):
+        filters = [
+            ['entity.Shot.code', 'is', context.entity["name"]]
+                ]
+        if context.task:
+            filters.append(['task.Task.content', 'is', context.task["name"]])
+        elif ctx.step:
+            filters.append(['task.Task.content', 'is', context.step["name"]])
+
+        fields = ['description', 'code', 'published_file_type']
+        order = [
+            {'field_name': 'version_number',
+             'direction': 'desc',}
+             ]
+        found = self.__app.sgtk.shotgun.find('PublishedFile', filters, fields, order)
+
+        # look for Nuke Script
+        img_seq = os.path.basename(path)
+        base = img_seq.split('.')[0]
+        code = base.split('_')[:-1]
+        version = base.split('_')[-1]
+        nk = '{code}.{version}.nk'.format(
+            code='_'.join(code),
+            version=version,
+            )
+
+        comment = None
+        for f in found:
+            if f['published_file_type']['name'] == 'Nuke Script':
+                if f['code'] == nk:
+                    comment = f['description']
+
+        print('\n'*3+'Found Comment: '+str(comment)+'\n'*3)
+        self.__app.log_debug('\n'*3+'Found Comment: '+str(comment)+'\n'*3)
+
+        return comment
