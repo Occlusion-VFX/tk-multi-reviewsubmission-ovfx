@@ -15,10 +15,28 @@ import nuke
 from datetime import datetime
 
 from tank_vendor import six
+from pprint import pprint
+import re
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
 ffmpeg_path = "V:/Scripts/FFMPEG/FFMPEG_Current/bin/ffmpeg.exe"
+
+### getting path to config root
+filepath = os.path.abspath(__file__)
+dirPath = os.path.dirname(filepath)
+configRoot = (os.sep).join(dirPath.split(os.sep)[:4])
+
+#path to config/hooks to grab node
+configHooks = os.path.join(configRoot, 'config', 'hooks')
+
+# getting latest burn node
+burnDir = os.path.join(
+    configHooks, 'burnnode'
+)
+burnFiles = [ file for file in os.listdir(burnDir) if os.path.splitext(file)[-1] == '.nk' ]
+burnFilename = burnFiles[-1]
+
 
 class RenderMedia(HookBaseClass):
     """
@@ -31,7 +49,8 @@ class RenderMedia(HookBaseClass):
         self.__app = self.parent
 
         self._burnin_nk = os.path.join(
-            self.__app.disk_location, "resources", "occludeburns.nk"
+            # getting variables above before Class
+            burnDir, burnFilename
         )
         self._font = os.path.join(
             self.__app.disk_location, "resources", "liberationsans_regular.ttf"
@@ -82,6 +101,9 @@ class RenderMedia(HookBaseClass):
         """
         output_node = None
         ctx = self.__app.context
+        
+        # collect all write nodes, if needed when rendering comp with slate mov
+        writeNodes = self.collectWriteNodes()
 
         # create group where everything happens
         group = nuke.nodes.Group()
@@ -96,6 +118,14 @@ class RenderMedia(HookBaseClass):
             read["last"].setValue(last_frame)
             if color_space:
                 read["colorspace"].setValue(color_space)
+            else:
+                cs = read['colorspace'].value()
+                if cs[:7] == 'default':
+                    text = cs.split(" ")[-1]
+                    update = text.replace("(","").replace(")","")
+                    color_space = update
+                else:
+                    color_space = cs
 
             data = self.wrangleData(first_frame, last_frame)
 
@@ -114,11 +144,12 @@ class RenderMedia(HookBaseClass):
                 scale.setInput(0, read if cubeFile is None else lut)
 
             # now create the slate/burnin node
+            print('\n\nUsing burnin node: {}\n\n'.format(burnFilename))
             burn = nuke.nodePaste(self._burnin_nk)
             if cubeFile is None:
                 burn.setInput(0, scale if crop else read)
             else:
-                burn.setInput(1, scale if crop else lut)
+                burn.setInput(0, scale if crop else lut)
 
             # add the logo
             burn.node("logo")["file"].setValue(self._logo)
@@ -128,36 +159,76 @@ class RenderMedia(HookBaseClass):
                 "version_number_padding"
             )
             version_str = version_padding_format % version
-
+        
             if ctx.task:
                 version_label = "%s, v%s" % (ctx.task["name"], version_str)
+
             elif ctx.step:
                 version_label = "%s, v%s" % (ctx.step["name"], version_str)
             else:
                 version_label = "v%s" % version_str
 
             ### INFO
+            prj = self.getProject(ctx.project['name'])
+            description =  self.getShotDescription(prj, ctx.entity['name'])
+            clientVersion = self.getClientVersionNumber(prj, ctx.entity['name'])
+            if clientVersion != None:
+                verSlate = clientVersion
+            else:
+                verSlate = int(version)
+                
             current_user = sgtk.util.get_current_user(self.__app.sgtk)
-            filename = os.path.splitext(os.path.basename(input_path))[0]
-
+            print('parsing filename and filetype')
+            filename, filetype = os.path.splitext(os.path.basename(input_path))
+            print('==> {}, {}'.format(filename, filetype))
             comment = self.retrieveComment(ctx, input_path,)
+            
+            burnDict = {
+                "project": ctx.project['name'],
+                "shotCode": ctx.entity['name'],
+                "dateSlate": datetime.today().strftime('%m.%d.%Y'), # dt.strftime('%m/%d/%y')
+                "ffSlate": first_frame,
+                "lfSlate": last_frame,
+                "colorspace": color_space,
+                "artist": current_user['name'],
+                "fnSlate": filename.split('.')[0],
+                "version": verSlate,
+                "VersionPadding": int(self.__app.get_setting("version_number_padding")),
+                "task": ctx.task["name"],
+                "submission": "Final",
+                "scope": description,
+                "message": comment,
+            }
 
-            ### BURN INS
-            burn.node('top_left')['message'].setValue(ctx.project['name'])
-            burn.node('top')['message'].setValue('')
-            burn.node('top_right')['message'].setValue(datetime.today().strftime('%m/%d/%y'))
-            burn.node('bottom_left')['message'].setValue('v{}'.format(version_str))
-            burn.node('bottom')['message'].setValue(ctx.entity['name'])
+            print("*"*30+'\n'*3)
+            for knob in burnDict:
+                print(knob, burnDict[knob])
+                burn[knob].setValue(burnDict[knob])
+            print("*"*30+'\n'*3)
 
-            # and the slate
-            burn.node('Project_Name')['message'].setValue(str(ctx.project['name']))
-            burn.node('Date')['message'].setValue(datetime.today().strftime('%m/%d/%y'))
-            burn.node('Filename')['message'].setValue(filename.split('.')[0])
-            burn.node('Frames')['message'].setValue("{} - {}".format(first_frame, last_frame))
-            burn.node('Artist')['message'].setValue(current_user['name'])
-            burn.node('Version')['message'].setValue(version_label)
-            burn.node('Notes')['message'].setValue(comment)
+            # render check format and render out approriate full frame slate
+            # outputs render to Publish folder
+            # ex: V:/Projects/Project_Data/[ project ]/sequences/[ seq ]/[ shot ]/comp/publish/elements/[ name ]/[ format ]/[ ext ]/[ filename ]
 
+
+            print('Setting up comp format render')
+            if filetype == '.mov':
+                self.movSlateRender(
+                    read,
+                    first_frame,
+                    last_frame,
+                    burn,
+                    writeNodes,
+                    burn['comp_slate'].value(),
+                )
+            else:
+                self.exrSlateRender(
+                    read,
+                    first_frame,
+                    burn,
+                    writeNodes,                    
+                    burn['comp_slate'].value()
+                    )
 
             # create a scale node
             scale = self.__create_scale_node(width, height)
@@ -165,7 +236,15 @@ class RenderMedia(HookBaseClass):
 
             # Create the output node
             output_node = self.__create_output_node(output_path)
+
+            # Match slate color to output colorspace of mov
+            output_color = output_node['colorspace'].value()
+            print(output_color)
+
+            burn['colorspace'].setValue(output_color)
             output_node.setInput(0, scale)
+            print("*"*30+'\n'*3)
+
         finally:
             group.end()
 
@@ -258,6 +337,7 @@ class RenderMedia(HookBaseClass):
                 # Nuke 9.0v1 changed the codec knob name to meta_codec and added an encoder knob
                 # (which defaults to the new mov64 encoder/decoder).
                 settings["meta_codec"] = "apcn"
+                settings['colorspace'] = 'sRGB'
             else:
                 settings["codec"] = "jpeg"
 
@@ -521,3 +601,309 @@ class RenderMedia(HookBaseClass):
         self.__app.log_debug('\n'*3+'Found Comment: '+str(comment)+'\n'*3)
 
         return comment
+
+
+    def getShotDescription(self, project, shot):
+        print('\n'+'*'*10+' Getting Shot Scope')
+        filters = [
+            ['project', 'is', project],
+            ['code', 'is', shot],
+        ]
+        fields = ['code', 'description', 'project', 'sg_client_version']
+        order = []
+        found = self.__app.sgtk.shotgun.find_one('Shot', filters, fields, order)
+
+        description = found['description']
+        print(description)
+        print('*'*10+' Found Shot Scope' + '\n')
+        return description
+
+
+    def getClientVersionNumber(self, project, shot):
+        print('\n'+'*'*10+' Getting Client Version')
+        filters = [
+            ['project', 'is', project],
+            ['code', 'is', shot],
+        ]
+        fields = ['code', 'description', 'project', 'sg_client_version']
+        order = []
+        found = self.__app.sgtk.shotgun.find_one('Shot', filters, fields, order)
+
+        versionNum = found['sg_client_version']
+        print('*'*10+' Found Client Version [{}]'.format(versionNum) + '\n')
+
+        return versionNum
+
+
+    def getProject(self, projectName): 
+        filters = []
+        fields = ['name']
+        order = []
+        projects = self.__app.sgtk.shotgun.find('Project', filters, fields, order)
+        for project in projects:
+            if project['name'].lower() == projectName.lower():
+                currProject = project
+        return currProject
+
+    
+    def exrSlateRender(self, readNode, first_frame, slateNode, allWrites, render):
+        print('\n\nRendering Exr Slate Frame')
+        """
+        Create output node and render slate frame.
+
+        :param snodetr readNode:         Input nuke read node
+        :param int first_frame:          First Frame of input
+        :param node slateNode:           Burnin/Slate Group node from Group
+
+        :returns:               None
+        :rtype:                 None
+        """
+        # read metadata and get path from Read Node
+        filepath = readNode.knob('file').getText()
+        readMeta = readNode.metadata()
+        simplified = dict()
+
+        filetype, settings = self.findWriteSettings(filepath, allWrites)
+
+        for data in readMeta:
+            key,name = data.split('/')
+            simplified[name] = readMeta[data]
+
+        colorspace = settings['colorspace']
+        if readNode['colorspace'].value() != colorspace:
+            readNode['colorspace'].setValue(colorspace)
+            slateNode['colorspace'].setValue(colorspace)
+
+        # Create and set write node
+        writeNode = nuke.nodes.Write()
+        writeNode.knob('file').setValue(filepath)
+        writeNode.knob('file_type').setValue(simplified['filereader'])
+        if simplified['filereader'] == 'exr':
+            writeNode.knob('compression').setValue(simplified['compressionName'])
+        writeNode.knob('datatype').setValue(simplified['bitsperchannel'])
+        writeNode.knob('colorspace').setValue(colorspace)
+
+        mainView = nuke.views()[0]
+
+        writeNode.setInput(0, slateNode)
+
+        if render:
+            # check if script in proxy and toggle
+            root_node = nuke.root()
+            is_proxy = root_node["proxy"].value()
+            if is_proxy:
+                root_node["proxy"].setValue(0)
+            
+            # write slate frame
+            nuke.executeMultiple(
+                [writeNode], ([first_frame - 1, first_frame - 1, 1],), [mainView]
+            )
+
+            # toggle proxy if previously on
+            if is_proxy:
+                root_node["proxy"].setValue(1)
+
+            print('==> Slate Frame render complete! [{}, {}]\n\n'.format(filepath,(first_frame - 1)))
+ 
+
+    def movSlateRender(self, readNode, first_frame, last_frame, slateNode, allWrites, render):
+        print('\n\nRendering Mov with Slate Frame')
+        """
+        Create output node and render mov with slate.
+
+        :param snodetr readNode:         Input nuke read node
+        :param int first_frame:          First Frame of input
+        :param node slateNode:           Burnin/Slate Group node from Group
+        :param list allWrites:           list of all write nodes in current Nuke Script
+
+
+        :returns:               None
+        :rtype:                 None
+        """
+        writeNodes = allWrites
+        path = readNode['file'].getValue()
+        filetype, settings = self.findWriteSettings(path, writeNodes)
+        writeNode = self.createWriteNode(path, filetype, settings)
+
+        colorspace = settings['colorspace']
+        if readNode['colorspace'].value() != colorspace:
+            readNode['colorspace'].setValue(colorspace)
+            slateNode['colorspace'].setValue(colorspace)
+
+        writeNode.setInput(0, slateNode)
+        mainView = nuke.views()[0]
+
+        # check if script in proxy and toggle
+        root_node = nuke.root()
+        is_proxy = root_node["proxy"].value()
+        if is_proxy:
+            root_node["proxy"].setValue(0)
+
+        if render:
+            # turn off burn in's for comp range
+            burnToggle = slateNode['burn_toggle'].value()
+            slateNode['burn_toggle'].setValue(False)
+            
+            # write slate frame
+            nuke.executeMultiple(
+                [writeNode], ([first_frame - 1, last_frame, 1],), [mainView]
+            )
+
+            # re-apply previous burn toggle status
+            slateNode['burn_toggle'].setValue(burnToggle)
+
+            # toggle proxy if previously on
+            if is_proxy:
+                root_node["proxy"].setValue(1)
+
+            print('==> Comp with Slate render complete! [{}]\n\n'.format(writeNode['file'].value()))
+            return writeNode
+
+
+    def collectWriteNodes(self,):
+        print('\nCollecting write nodes')
+        allNodes = nuke.allNodes()
+        writeNodes = []
+        for node in allNodes:
+            if node.Class() == 'Write':
+                writeNodes.append(node)
+            elif node.Class() == 'WriteTank':
+                writeNodes.append(node)
+        print('=> Found [{}] Write Nodes'.format(len(writeNodes)))
+        return writeNodes
+
+
+    def nukeWriteParse(self, node, debug=False):
+        knobs = node.knobs()
+        if debug:
+            for knob in knobs:
+                    print(knob, knobs[knob].value())
+        
+        file = node['file'].value()
+        filetype = node['file_type'].value()
+        settingVars = [
+            'create_directories',
+            'colorspace',
+            # 'mov64_codec',
+            'channels',
+        ]
+        if filetype == 'mov':
+            settingVars.append('mov64_codec')
+
+        if node['mov64_codec'].value() == 'AVdn':
+            print('DNxHD Mov')
+            settingVars.append('mov64_dnxhr_codec_profile')
+        if node['mov64_codec'].value() == 'appr':
+            print('Apple ProRes Mov')
+            settingVars.append('mov_prores_codec_profile')
+
+
+        writeSettings = {}
+        for var in settingVars:
+            writeSettings[var] = node[var].value()
+        pprint(writeSettings)
+
+        return writeSettings
+
+
+    def shotgridWriteParse(self, node, debug=False):
+        knobs = node.knobs()
+        if debug:
+            for knob in knobs:
+                print(knob, node[knob].value())
+            print('')
+
+        settings = node['tk_file_type_settings'].value()
+        filetype = node['tk_file_type'].value()
+
+        ''' 
+        cleaning preset sgtk settings string
+        from (dp1\nS'mov_prores_codec_profile'\np2\nS'ProRes 4:4:4:4 XQ 12-bit'\np3\nsS'meta_encoder'\np4\nS'mov64'
+            \np5\nsS'colorspace'\np6\nS'sRGB'\np7\nsS'mov64_codec'\np8\nS'appr'\np9\nsS'create_directories'\np10\nI01\ns.
+        to list of settings
+        '''
+        cleaned = re.findall(r"\'(.+?)\'", str(settings))
+
+        # setting up directory of settings
+        name = cleaned[::2] 
+        variable = cleaned[1::2]
+        writeSettings = {}
+        for i, n in enumerate(name):
+            if n == 'create_directories':
+                writeSettings[n] = True
+            else:
+                writeSettings[n] = variable[i]
+
+        # applying settings grabbed directly from node
+        writeSettings['channels'] = node['channels'].value()
+
+        '''
+        clean default from colorspace if it exists
+        '''
+        try:
+           if node['colorspace'].value().split(' ')[0].lower() == 'default':
+                cs = re.findall( 
+                   r"(?<=\()(.*?)(?=\))",
+                   str(node['colorspace'].value())
+                )[0]
+        except:
+            cs = node['colorspace'].value()
+
+        writeSettings['colorspace'] = cs
+        print(node.name())   
+        pprint(writeSettings)
+
+        return writeSettings
+
+
+    def findWriteSettings(self, path, nodes, debug=False):
+        print('\nlooking through read nodes\n')
+        reviewFN = os.path.basename(path)
+        foundNode = None
+        for node in nodes:
+            if node.Class() == 'WriteTank':
+                print('\nFound ShotGrid Write: {}'.format(node.name())) 
+                filename = node['path_filename'].value()
+                if reviewFN == filename:
+                    filetype = node['tk_file_type'].value()
+                    writeSettings = self.shotgridWriteParse(node, debug=debug)
+                    foundNode = node
+                else:
+                    print('Does not match source\n{}:{}'.format(reviewFN,filename))
+            else:
+                print('\nStandard Write Node: {}'.format(node.name()))
+                filename = os.path.basename(node['file'].value())
+
+                if reviewFN == filename:
+                    filetype = node['file_type'].value()
+                    writeSettings = self.nukeWriteParse(node, debug=debug)
+                    foundNode = node
+                else:
+                    print('Does not match source\n{}:{}'.format(reviewFN,filename))
+
+        if foundNode == None:
+            print('No matching write node')
+            return None, None
+        else:
+            print('\n\nUsing Node: {}'.format(foundNode.name()))
+            return filetype, writeSettings
+
+
+    def createWriteNode(self, path, filetype, settings, debug=False):
+        print('Creating Write Node')
+        writeNode = nuke.nodes.Write()
+        writeNode['file'].setValue(path.replace('.mov', '_slate.mov'))
+        writeNode['file_type'].setValue(filetype)
+
+        for s in settings:
+            print(s, settings[s])
+            if s == 'colorspace':
+                try:
+                    colorspace = re.findall(r'\((.*?)\)', settings[s])[0]
+                except:
+                    colorspace = settings[s]
+                writeNode[s].setValue(colorspace)
+            else:
+                writeNode[s].setValue(settings[s])
+
+        return writeNode
