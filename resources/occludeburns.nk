@@ -1,0 +1,1326 @@
+set cut_paste_input [stack 0]
+version 12.0 v2
+push $cut_paste_input
+Group {
+ name OccludeBurns
+ selected true
+ xpos 789
+ ypos -203
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 391
+  ypos -462
+ }
+ Dot {
+  name Dot4
+  xpos 425
+  ypos -307
+ }
+set N14308400 [stack 0]
+ NoOp {
+  name burnin_font
+  xpos 391
+  ypos -154
+  addUserKnob {20 User}
+  addUserKnob {7 scale l "" +STARTLINE}
+  scale {{.33*(width/1920)}}
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name top_left
+  xpos 391
+  ypos -128
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  xjustify center
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name top
+  xpos 391
+  ypos -102
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  xjustify right
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name top_right
+  xpos 391
+  ypos -76
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name bottom_left
+  xpos 391
+  ypos -50
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  xjustify center
+  yjustify bottom
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name bottom
+  xpos 391
+  ypos -24
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "\[format %04d \[frame]]"
+  old_message {{49 48 48 49}
+    }
+  old_expression_markers {{0 3}
+    }
+  box {{width*.02} {height*.02} {width*.98} {height*.98}}
+  xjustify right
+  yjustify bottom
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{burnin_font.scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{0 1511}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name framecounter
+  xpos 391
+  ypos 2
+ }
+push $N14308400
+ NoOp {
+  name Source
+  xpos 43
+  ypos -311
+  addUserKnob {20 User}
+  addUserKnob {12 dim}
+  dim {{width} {height}}
+ }
+set Na7f66000 [stack 0]
+ Dot {
+  name Dot1
+  xpos -171
+  ypos -307
+ }
+ Crop {
+  box {{width*.2} {height*.85} {width*.98} {height}}
+  reformat true
+  crop false
+  name Crop2
+  xpos -205
+  ypos -134
+ }
+ Group {
+  name ColorBars
+  xpos -205
+  ypos -108
+ }
+  Input {
+   inputs 0
+   name Input1
+   xpos -470
+   ypos -502
+  }
+  Shuffle {
+   red black
+   green black
+   blue black
+   alpha black
+   name Shuffle2
+   label "\[value in]"
+   xpos -470
+   ypos -462
+  }
+set Nbe217000 [stack 0]
+  Rectangle {
+   area {0 0 {160*(width/1498)} {20*(height/160)}}
+   name Rectangle1
+   xpos -470
+   ypos -260
+  }
+  Transform {
+   translate {{Rectangle1.area.r*1.05} {(height/6)*1.5 x1001 54}}
+   name Transform1
+   label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+   xpos -470
+   ypos -234
+  }
+set Nbe216800 [stack 0]
+  Transform {
+   translate {0 {(height/5)}}
+   center {2048 1152}
+   name Transform4
+   label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+   xpos -360
+   ypos -234
+  }
+set Nbe216400 [stack 0]
+  Transform {
+   translate {{width/9} 0}
+   center {960 540}
+   name Transform3
+   label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+   xpos -360
+   ypos -194
+  }
+  set Cbe216000 [stack 0]
+set Nbe216000 [stack 0]
+clone $Cbe216000 {
+   xpos -360
+   ypos -154
+   selected false
+  }
+set Nbd5fdc00 [stack 0]
+clone $Cbe216000 {
+   xpos -360
+   ypos -114
+   selected false
+  }
+set Nbd5fd800 [stack 0]
+clone $Cbe216000 {
+   xpos -360
+   ypos -74
+   selected false
+  }
+set Nbd5fd400 [stack 0]
+clone $Cbe216000 {
+   xpos -360
+   ypos -34
+   selected false
+  }
+set Nbd5fd000 [stack 0]
+clone $Cbe216000 {
+   xpos -360
+   ypos 6
+   selected false
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0 0 0.5 0}
+   name Constant13
+   xpos 387
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle15
+   label "\[value in]"
+   xpos 387
+   ypos -407
+  }
+  Dot {
+   name Dot14
+   xpos 421
+   ypos 17
+  }
+push $Nbd5fd000
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.5 0 0 0}
+   name Constant12
+   xpos 277
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle14
+   label "\[value in]"
+   xpos 277
+   ypos -407
+  }
+  Dot {
+   name Dot13
+   xpos 311
+   ypos -23
+  }
+push $Nbd5fd400
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.5 0 0.5 0}
+   name Constant11
+   xpos 167
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle13
+   label "\[value in]"
+   xpos 167
+   ypos -407
+  }
+  Dot {
+   name Dot12
+   xpos 201
+   ypos -63
+  }
+push $Nbd5fd800
+  Constant {
+   inputs 0
+   channels rgb
+   color {0 0.5 0 0}
+   name Constant10
+   xpos 57
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle12
+   label "\[value in]"
+   xpos 57
+   ypos -407
+  }
+  Dot {
+   name Dot11
+   xpos 91
+   ypos -103
+  }
+push $Nbd5fdc00
+  Constant {
+   inputs 0
+   channels rgb
+   color {0 0.5 0.5 0}
+   name Constant9
+   xpos -53
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle11
+   label "\[value in]"
+   xpos -53
+   ypos -407
+  }
+  Dot {
+   name Dot10
+   xpos -19
+   ypos -143
+  }
+push $Nbe216000
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.5 0.5 0 0}
+   name Constant8
+   xpos -163
+   ypos -481
+  }
+  Shuffle {
+   alpha white
+   name Shuffle10
+   label "\[value in]"
+   xpos -163
+   ypos -407
+  }
+  Dot {
+   name Dot9
+   xpos -129
+   ypos -183
+  }
+push $Nbe216400
+  Constant {
+   inputs 0
+   channels rgb
+   color 1
+   name Constant6
+   xpos -580
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle3
+   label "\[value in]"
+   xpos -580
+   ypos -387
+  }
+set N3751c00 [stack 0]
+  Dot {
+   name Dot4
+   xpos -344
+   ypos -376
+  }
+push $Nbe217000
+  Dot {
+   name Dot2
+   xpos -216
+   ypos -451
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge4
+   xpos -250
+   ypos -227
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge5
+   xpos -250
+   ypos -187
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge6
+   xpos -250
+   ypos -147
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge11
+   xpos -250
+   ypos -107
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge12
+   xpos -250
+   ypos -67
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge13
+   xpos -250
+   ypos -27
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge14
+   xpos -250
+   ypos 13
+  }
+  Dot {
+   name Dot15
+   xpos -216
+   ypos 129
+  }
+push $Nbe216800
+clone $Cbe216000 {
+   xpos -470
+   ypos -194
+   selected false
+  }
+set Nb8849000 [stack 0]
+clone $Cbe216000 {
+   xpos -470
+   ypos -154
+   selected false
+  }
+set Nb8848c00 [stack 0]
+clone $Cbe216000 {
+   xpos -470
+   ypos -114
+   selected false
+  }
+set Nb8848800 [stack 0]
+clone $Cbe216000 {
+   xpos -470
+   ypos -74
+   selected false
+  }
+set Nb8848400 [stack 0]
+clone $Cbe216000 {
+   xpos -470
+   ypos -34
+   selected false
+  }
+set Nb8848000 [stack 0]
+clone $Cbe216000 {
+   xpos -470
+   ypos 6
+   selected false
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   name Constant2
+   xpos -1240
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle9
+   label "\[value in]"
+   xpos -1240
+   ypos -387
+  }
+  Dot {
+   name Dot8
+   xpos -1206
+   ypos 17
+  }
+push $Nb8848000
+  Constant {
+   inputs 0
+   channels rgb
+   color 0.17
+   name Constant3
+   xpos -1128
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle8
+   label "\[value in]"
+   xpos -1128
+   ypos -387
+  }
+  Dot {
+   name Dot7
+   xpos -1094
+   ypos -23
+  }
+push $Nb8848400
+  Constant {
+   inputs 0
+   channels rgb
+   color 0.34
+   name Constant5
+   xpos -1020
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle7
+   label "\[value in]"
+   xpos -1020
+   ypos -387
+  }
+  Dot {
+   name Dot6
+   xpos -986
+   ypos -63
+  }
+push $Nb8848800
+  Constant {
+   inputs 0
+   channels rgb
+   color 0.5
+   name Constant1
+   xpos -910
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle6
+   label "\[value in]"
+   xpos -910
+   ypos -387
+  }
+  Dot {
+   name Dot5
+   xpos -876
+   ypos -103
+  }
+push $Nb8848c00
+  Constant {
+   inputs 0
+   channels rgb
+   color 0.67
+   name Constant7
+   xpos -800
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle5
+   label "\[value in]"
+   xpos -800
+   ypos -387
+  }
+  Dot {
+   name Dot3
+   xpos -766
+   ypos -143
+  }
+push $Nb8849000
+  Constant {
+   inputs 0
+   channels rgb
+   color 0.84
+   name Constant4
+   xpos -690
+   ypos -461
+  }
+  Shuffle {
+   alpha white
+   name Shuffle4
+   label "\[value in]"
+   xpos -690
+   ypos -387
+  }
+  Dot {
+   name Dot1
+   xpos -656
+   ypos -183
+  }
+push $Nbe216800
+push $N3751c00
+push $Nbe217000
+  Merge2 {
+   inputs 2+1
+   name Merge1
+   xpos -580
+   ypos -227
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge2
+   xpos -580
+   ypos -187
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge3
+   xpos -580
+   ypos -147
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge7
+   xpos -580
+   ypos -107
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge8
+   xpos -580
+   ypos -67
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge9
+   xpos -580
+   ypos -27
+  }
+  Merge2 {
+   inputs 2+1
+   name Merge10
+   xpos -580
+   ypos 13
+  }
+  Merge2 {
+   inputs 2
+   name Merge15
+   xpos -580
+   ypos 125
+  }
+  Output {
+   name Output1
+   xpos -580
+   ypos 244
+  }
+  Viewer {
+   frame_range 1001-1063
+   fps 23.97602463
+   name Viewer1
+   xpos -407
+   ypos 100
+  }
+ end_group
+ Transform {
+  translate {{Crop2.box.x} {Crop2.box.y}}
+  black_outside false
+  name Transform1
+  label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+  xpos -205
+  ypos -82
+ }
+ Dot {
+  name Dot9
+  xpos -171
+  ypos 264
+ }
+ Read {
+  inputs 0
+  file_type png
+  origset true
+  version 2
+  auto_alpha true
+  name logo
+  label "\n\n\[lindex \[split \[lindex \[split \[knob \[topnode].file] .] 0] /] 2]\n\[lindex \[split \[lindex \[split \[knob \[topnode].file] .] 0] /] end]\n\[value \[topnode].first] - \[value \[topnode].last]\n"
+  xpos -67
+  ypos -288
+ }
+ Reformat {
+  type "to box"
+  box_width {{Slate_Dim.dim.x}}
+  scale 0.697
+  name Reformat4
+  xpos -67
+  ypos -144
+ }
+ NoOp {
+  name LogoDim
+  xpos -67
+  ypos -118
+  addUserKnob {20 User}
+  addUserKnob {12 dim}
+  dim {{width} {height}}
+ }
+ Premult {
+  name Premult1
+  xpos -67
+  ypos -92
+ }
+ Reformat {
+  type "to box"
+  box_width {{Source.dim.x}}
+  box_height {{Source.dim.y}}
+  resize none
+  center false
+  name Reformat6
+  xpos -67
+  ypos -66
+ }
+ Transform {
+  translate {{Still_Transform.translate.x+(Slate_Dim.dim.x-LogoDim.dim.x)} {(height*.25)-LogoDim.dim.y}}
+  center {{LogoDim.dim.x} 0}
+  name Transform2
+  label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+  xpos -67
+  ypos -40
+ }
+push $Na7f66000
+ FrameHold {
+  first_frame {{first_frame}}
+  name FrameHold2
+  xpos 43
+  ypos -285
+ }
+set N2b409b80 [stack 0]
+ Reformat {
+  type scale
+  scale 0.25
+  name Reformat2
+  xpos 153
+  ypos -278
+ }
+ Crop {
+  box {0 0 {width} {height}}
+  name Crop1
+  xpos 153
+  ypos -252
+ }
+ NoOp {
+  name Slate_Dim
+  xpos 153
+  ypos -226
+  addUserKnob {20 User}
+  addUserKnob {12 dim}
+  dim {{width} {height}}
+ }
+ Transform {
+  translate {{((width*(1/Reformat2.scale))-width)*.85} {((height*(1/Reformat2.scale))-height)*.6}}
+  center {{width} 0}
+  black_outside false
+  name Still_Transform
+  label "T: \[value translate] | R: \[value rotate] | S: \[value scale]"
+  xpos 153
+  ypos -144
+ }
+push $N2b409b80
+ Blur {
+  size 100
+  name Blur1
+  label "size:\[value size]"
+  xpos 43
+  ypos -245
+ }
+ Multiply {
+  value 0.125
+  name Multiply1
+  label "value: \[value value]"
+  xpos 43
+  ypos -191
+ }
+ Merge2 {
+  inputs 2
+  name Merge4
+  xpos 43
+  ypos -137
+ }
+ Merge2 {
+  inputs 2
+  name Merge5
+  xpos 43
+  ypos -33
+ }
+ Dot {
+  name Dot2
+  xpos 77
+  ypos 23
+ }
+set N445a7c00 [stack 0]
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle1
+  label "\[value in]"
+  xpos -67
+  ypos 12
+ }
+ NoOp {
+  name Spacing
+  xpos -67
+  ypos 52
+  addUserKnob {20 User}
+  addUserKnob {12 spacing l "" +STARTLINE}
+  spacing {{50*(width/1920)} 0}
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "Occlusion VFX"
+  old_message {{79 99 99 108 117 115 105 111 110 32 86 70 88}
+    }
+  box {{width*.2} {Project_Name.box.y-Spacing.spacing.x} {width*.55} {Project_Name.box.y}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 13
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{.3*(width/1920)}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Vendor
+  xpos -67
+  ypos 78
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message Date
+  old_message {{68 97 116 101}
+    }
+  box {{width*.2} {Vendor.box.y-Spacing.spacing.x} {width*.55} {Vendor.box.y}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 4
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Date
+  xpos -67
+  ypos 104
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message Filename
+  old_message {{70 105 108 101 110 97 109 101}
+    }
+  box {{width*.2} {Date.box.y-Spacing.spacing.x} {width*.55} {Date.box.y}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 8
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Filename
+  xpos -67
+  ypos 130
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message Artist
+  old_message {{65 114 116 105 115 116}
+    }
+  box {{width*.2} {Filename.box.y-Spacing.spacing.x} {width*.55} {Filename.box.y}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Artist
+  xpos -67
+  ypos 156
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message Frames
+  old_message {{70 114 97 109 101 115}
+    }
+  box {{width*.2} {Artist.box.y-Spacing.spacing.x} {width*.55} {Artist.box.y}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 6
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Frames
+  xpos -67
+  ypos 182
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "Entity, v000"
+  old_message {{69 110 116 105 116 121 44 32 118 48 48 48}
+    }
+  box {{Still_Transform.translate.x} {Still_Transform.translate.y-(Spacing.spacing.x*1)} {Still_Transform.translate.x+Slate_Dim.dim.x} {Still_Transform.translate.y}}
+  xjustify right
+  yjustify center
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale*1.5}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Version
+  xpos -67
+  ypos 208
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message Notes
+  old_message {{78 111 116 101 115}
+    }
+  box {{width*.2} 0 {width*.55} {Frames.box.y-(Spacing.spacing.x)}}
+  transforms {{0 2}
+    }
+  font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+  global_font_scale {{Vendor.global_font_scale}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Notes
+  xpos -67
+  ypos 234
+ }
+push $N445a7c00
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle2
+  label "\[value in]"
+  xpos 153
+  ypos 12
+ }
+ Rectangle {
+  area {{width*.18} 0 {Divider.area.x+(5*(width/1920))} {height}}
+  name Divider
+  xpos 153
+  ypos 52
+ }
+set Nc30a5000 [stack 0]
+ Dot {
+  name Dot3
+  xpos 187
+  ypos 78
+ }
+set Nc30a4c00 [stack 0]
+push $Nc30a5000
+push $Nc30a4c00
+push $Nc30a5000
+push $N445a7c00
+ Merge2 {
+  inputs 2+1
+  operation overlay
+  name Merge1
+  xpos 43
+  ypos 74
+ }
+ Merge2 {
+  inputs 2+1
+  operation overlay
+  name Merge2
+  xpos 43
+  ypos 100
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  message "Project Name"
+  old_message {{80 114 111 106 101 99 116 32 78 97 109 101}
+    }
+  box {{width*.2} {height*.75} {width} {height}}
+  yjustify bottom
+  transforms {{0 2}
+    }
+  cursor_position 12
+  font {{ Segoe UI : Bold : segoeuib.ttf : 0 }}
+  global_font_scale {{.8*(width/1920)}}
+  center {960 540}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{960 540}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  name Project_Name
+  xpos 43
+  ypos 182
+ }
+ Group {
+  name Labels
+  xpos 43
+  ypos 208
+ }
+  Input {
+   inputs 0
+   name Input1
+   xpos 391
+   ypos 176
+  }
+set Nb4eefc00 [stack 0]
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Vendor
+   old_message {{86 101 110 100 111 114}
+     }
+   box {0 {Project_Name.box.y-Spacing.spacing.x} {width*.16} {Project_Name.box.y}}
+   xjustify right
+   yjustify bottom
+   transforms {{0 2}
+     }
+   cursor_position 6
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{.3*(width/1920)}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Vendor_Label
+   xpos 391
+   ypos 216
+  }
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Date
+   old_message {{68 97 116 101}
+     }
+   box {0 {Vendor_Label.box.y-Spacing.spacing.x} {width*.16} {Vendor_Label.box.y}}
+   xjustify right
+   yjustify bottom
+   transforms {{0 2}
+     }
+   cursor_position 4
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{Vendor_Label.global_font_scale}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Date_Label
+   xpos 391
+   ypos 242
+  }
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Filename
+   old_message {{70 105 108 101 110 97 109 101}
+     }
+   box {0 {Date_Label.box.y-Spacing.spacing.x} {width*.16} {Date_Label.box.y}}
+   xjustify right
+   yjustify bottom
+   transforms {{0 2}
+     }
+   cursor_position 8
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{Vendor_Label.global_font_scale}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Filename_Label
+   xpos 391
+   ypos 268
+  }
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Artist
+   old_message {{65 114 116 105 115 116}
+     }
+   box {0 {Filename_Label.box.y-Spacing.spacing.x} {width*.16} {Filename_Label.box.y}}
+   xjustify right
+   yjustify bottom
+   transforms {{0 2}
+     }
+   cursor_position 6
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{Vendor_Label.global_font_scale}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Artist_Label
+   xpos 391
+   ypos 294
+  }
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Frames
+   old_message {{70 114 97 109 101 115}
+     }
+   box {0 {Artist_Label.box.y-Spacing.spacing.x} {width*.16} {Artist_Label.box.y}}
+   xjustify right
+   yjustify bottom
+   transforms {{0 2}
+     }
+   cursor_position 6
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{Vendor_Label.global_font_scale}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Frames_Label
+   xpos 391
+   ypos 320
+  }
+  Text2 {
+   font_size_toolbar 100
+   font_width_toolbar 100
+   font_height_toolbar 100
+   message Notes
+   old_message {{78 111 116 101 115}
+     }
+   box {0 0 {width*.16} {Frames_Label.box.y-(Spacing.spacing.x)}}
+   xjustify right
+   transforms {{0 2}
+     }
+   font {{ Segoe UI : Regular : segoeui.ttf : 0 }}
+   global_font_scale {{Vendor_Label.global_font_scale}}
+   center {960 540}
+   cursor_initialised true
+   autofit_bbox false
+   initial_cursor_position {{960 540}
+     }
+   group_animations {{0} imported: 0 selected: items: "root transform/"}
+   animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+     }
+   name Notes_label
+   selected true
+   xpos 391
+   ypos 346
+  }
+  Output {
+   name Output1
+   xpos 391
+   ypos 446
+  }
+push $Nb4eefc00
+  Dot {
+   name Dot1
+   xpos 551
+   ypos 180
+  }
+  NoOp {
+   name Spacing
+   xpos 517
+   ypos 229
+   addUserKnob {20 User}
+   addUserKnob {12 spacing l "" +STARTLINE}
+   spacing {{50*(width/1920)} 0}
+  }
+ end_group
+ Merge2 {
+  inputs 2
+  name Merge6
+  xpos 43
+  ypos 234
+ }
+ Merge2 {
+  inputs 2
+  name Merge11
+  xpos 43
+  ypos 260
+ }
+set Nbd2e7000 [stack 0]
+ Switch {
+  inputs 2
+  which {{"\[python -execlocal first_frame\\ =\\ nuke.root()\\\[\\\"first_frame\\\"\\].value()\\ncurr_frame\\ =\\ nuke.root()\\\[\\\"frame\\\"\\].value()\\n\\nif\\ curr_frame\\ <\\ first_frame:\\n\\ \\ #\\ frames\\ before\\ the\\ start\\ of\\ the\\ sequence\\n\\ \\ #\\ switch\\ to\\ slate\\n\\ \\ ret\\ =\\ 0\\nelse:\\n\\ \\ #\\ play\\ back\\ sequence\\ with\\ burnins\\n\\ \\ ret\\ =\\ 1\\n\\n]" x4 0 x1004 0 x1005 1}}
+  name slate_or_burnin_chooser
+  label "Switches to the slate if curr_frame < start_frame for the current scene."
+  xpos 391
+  ypos 253
+ }
+ Output {
+  name Output1
+  xpos 391
+  ypos 427
+ }
+push $Nbd2e7000
+ Viewer {
+  frame_range 1001-1063
+  fps 23.97602463
+  colour_sample_bbox {0.8076171875 0.0908203125 0.8081054688 0.09130859375}
+  name Viewer1
+  xpos -1612
+  ypos 396
+ }
+end_group
